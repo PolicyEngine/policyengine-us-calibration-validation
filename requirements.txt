@@ -1,3 +1,4 @@
 plotly
 policyengine-core
 pandas
+ipython

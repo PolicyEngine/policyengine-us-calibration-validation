@@ -27,6 +27,9 @@ names = st.multiselect(
     [x for x in list(training_log.name.unique()) if "population" not in x],
 )
 
+if names == []:
+    names = "employment income aggregate"
+
 performance_df = pd.DataFrame() # columns: [name, source_dataset, deviation]
 
 for name in names:

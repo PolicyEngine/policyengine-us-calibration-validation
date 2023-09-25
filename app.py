@@ -61,9 +61,16 @@ for name in names:
         })
     ])
 
+performance_df = performance_df.sort_values("Source dataset", ascending=False)
+performance_df.Deviation = performance_df.Deviation.apply(lambda x: max(x, 0.0049))
+
+def capitalise(string):
+    return string[0].upper() + string[1:]
+
+performance_df["Metric"] = performance_df["Metric"].apply(capitalise)
 
 fig = px.bar(
-    performance_df.sort_values("Source dataset", ascending=False),
+    performance_df,
     y="Metric",
     x="Deviation",
     color="Source dataset",
@@ -73,11 +80,16 @@ fig = px.bar(
         "Calibrated CPS": GRAY,
         "CPS": DARK_GRAY,
     },
+    text=performance_df.Deviation.apply(lambda x: f"{x:.1%}"),
 )
-fig = fig.update_layout(
+fig = format_fig(fig.update_layout(
     title="Deviation from official values, by dataset",
     xaxis_tickformat=".0%",
-)
+    xaxis_range=[0, 1],
+    # min font size for text
+    uniformtext_minsize=12,
+    legend_traceorder="reversed",
+))
 fig
 
 fig = px.scatter(

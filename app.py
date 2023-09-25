@@ -3,6 +3,8 @@ import plotly.express as px
 from policyengine_core.charts import format_fig, BLUE, GRAY, DARK_GRAY
 import streamlit as st
 
+st.title("PolicyEngine US calibration")
+
 training_log_puf_extended_cps = pd.read_csv(
     "training_log.csv.gz", compression="gzip"
 )
@@ -20,10 +22,77 @@ training_log_targets["value"] = training_log_targets["target"]
 training_log_targets["Source dataset"] = "Official"
 training_log = pd.concat([training_log, training_log_targets])
 
-name = st.selectbox(
+names = st.multiselect(
     "Metric",
     training_log.name.unique(),
 )
+
+st.write(training_log.name.unique().size)
+
+performance_df = pd.DataFrame() # columns: [name, source_dataset, deviation]
+
+for name in names:
+    official_value = calibration_final_results[
+        (calibration_final_results.Variable == name)
+        & (calibration_final_results["Source dataset"] == "Official")
+    ].Value.iloc[0]
+    calibrated_value = calibration_final_results[
+        (calibration_final_results.Variable == name)
+        & (calibration_final_results["Source dataset"] == "Calibrated CPS")
+    ].Value.iloc[0]
+    enhanced_value = calibration_final_results[
+        (calibration_final_results.Variable == name)
+        & (calibration_final_results["Source dataset"] == "Enhanced CPS")
+    ].Value.iloc[0]
+    cps_value = calibration_final_results[
+        (calibration_final_results.Variable == name)
+        & (calibration_final_results["Source dataset"] == "CPS")
+    ].Value.iloc[0]
+    performance_df = pd.concat([
+        performance_df,
+        pd.DataFrame({
+            "Metric": [name] * 3,
+            "Source dataset": ["CPS", "Calibrated CPS", "Enhanced CPS"],
+            "Deviation": [
+                abs((cps_value - official_value) / official_value),
+                abs((calibrated_value - official_value) / official_value),
+                abs((enhanced_value - official_value) / official_value),
+            ]
+        })
+    ])
+
+
+fig = px.bar(
+    performance_df.sort_values("Source dataset", ascending=False),
+    y="Metric",
+    x="Deviation",
+    color="Source dataset",
+    barmode="group",
+    color_discrete_map={
+        "Enhanced CPS": BLUE,
+        "Calibrated CPS": GRAY,
+        "CPS": DARK_GRAY,
+    },
+)
+fig = fig.update_layout(
+    title="Deviation from official values, by dataset",
+    xaxis_tickformat=".0%",
+)
+fig
+
+fig = px.scatter(
+    performance_df,
+    y="Metric",
+    x="Deviation",
+    color="Source dataset",
+    #barmode="group",
+    #color_discrete_map={
+    #    "Enhanced CPS": BLUE,
+    #    "Calibrated CPS": GRAY,
+    #    "CPS": DARK_GRAY,
+    #},
+)
+fig
 
 total_loss_log = training_log[training_log.name == name]
 

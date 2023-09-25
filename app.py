@@ -24,10 +24,8 @@ training_log = pd.concat([training_log, training_log_targets])
 
 names = st.multiselect(
     "Metric",
-    training_log.name.unique(),
+    [x for x in list(training_log.name.unique()) if "population" not in x],
 )
-
-st.write(training_log.name.unique().size)
 
 performance_df = pd.DataFrame() # columns: [name, source_dataset, deviation]
 
@@ -62,6 +60,7 @@ for name in names:
     ])
 
 performance_df = performance_df.sort_values("Source dataset", ascending=False)
+performance_df["Deviation text"] = performance_df.Deviation.apply(lambda x: f"{x:.1%}")
 performance_df.Deviation = performance_df.Deviation.apply(lambda x: max(x, 0.0049))
 
 def capitalise(string):
@@ -80,7 +79,7 @@ fig = px.bar(
         "Calibrated CPS": GRAY,
         "CPS": DARK_GRAY,
     },
-    text=performance_df.Deviation.apply(lambda x: f"{x:.1%}"),
+    text=performance_df["Deviation text"]
 )
 fig = format_fig(fig.update_layout(
     title="Deviation from official values, by dataset",

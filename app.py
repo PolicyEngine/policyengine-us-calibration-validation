@@ -25,10 +25,11 @@ training_log = pd.concat([training_log, training_log_targets])
 names = st.multiselect(
     "Metric",
     [x for x in list(training_log.name.unique()) if "population" not in x],
+    default=["employment income aggregate", "federal income tax", "SSI"],
 )
 
-if names == []:
-    names = "employment income aggregate"
+if len(names) == 0:
+    names = ["employment income aggregate", "federal income tax", "SSI"]
 
 performance_df = pd.DataFrame() # columns: [name, source_dataset, deviation]
 

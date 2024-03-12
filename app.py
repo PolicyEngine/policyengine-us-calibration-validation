@@ -3,7 +3,6 @@ import plotly.express as px
 from policyengine_core.charts import *
 import streamlit as st
 import numpy as np
-from policyengine_us.data.storage import STORAGE_FOLDER
 
 st.set_page_config(layout="wide")
 
